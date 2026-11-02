@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>자세 자동 라벨</title><link rel="icon" href="data:,">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2330;--mute:#6b7280;--line:#e3e6eb;--acc:#2563eb;--warn:#d97706;--bad:#dc2626;--ok:#16a34a}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,"Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:8px 16px}
+header .hrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+header h1{font-size:16px;margin:0}#curw{font-size:14px}
+nav{display:flex;gap:4px;flex-wrap:wrap}nav button{border:0;background:none;padding:8px 12px;border-radius:8px;cursor:pointer;font:inherit;color:var(--mute)}
+nav button.on{background:#e8efff;color:var(--acc);font-weight:600}nav button:disabled{opacity:.4;cursor:default}
+.cnt{font-size:12px;color:var(--mute);margin-left:5px;font-weight:400}
+#jobmini{margin:0 0 0 auto;font-size:13px;color:var(--mute)}#jobmini.go{cursor:pointer;color:var(--acc);text-decoration:underline dotted}
+main{padding:16px;max-width:1500px;margin:0 auto}.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+select,input[type=number],input[type=text]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.btn{font:inherit;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.danger-o{background:#fff;border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}.btn.sm{padding:3px 9px;font-size:12px}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--acc);text-decoration:underline;cursor:pointer}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.panel h2{font-size:15px;margin:0 0 8px}h3.sec{font-size:14px;margin:18px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.two{grid-template-columns:1fr}}
+.sub{border:1px solid var(--line);border-radius:10px;padding:12px}.sub h3{font-size:14px;margin:0 0 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer}
+.card.need{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}.card.done{border-color:var(--ok)}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.card .cap{padding:6px 8px;font-size:12px;color:var(--mute)}.card .cap .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pic{position:relative;line-height:0;background:#ddd}.pic img{width:100%;height:auto;display:block}
+.pic svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.card.sel .pic::after{content:'';position:absolute;inset:0;background:rgba(37,99,235,.18);pointer-events:none}
+.chk{position:absolute;top:6px;left:6px;z-index:2;width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,.8);border:1.5px solid #6b7280;line-height:19px;text-align:center;font-size:14px;font-weight:700;color:transparent;user-select:none}
+.chk:hover{border-color:var(--acc)}.card.sel .chk{background:var(--acc);border-color:var(--acc);color:#fff}
+.tag{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;font-weight:600;margin-right:4px;line-height:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+.note{color:var(--mute);font-size:13px;margin:6px 0 10px}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin:6px 0 0}
+.warnl{color:var(--warn);font-size:13px;margin:4px 0 0 22px}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.seg button{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
+.seg button.on{background:#e8efff;color:var(--acc);border-color:#c7d7fe;font-weight:600}.seg button.zero{color:var(--mute)}.seg button.zero .sc{color:var(--mute)!important}
+.seg .sc{margin-left:4px;font-weight:600}
+.selbar{position:sticky;top:var(--hh,92px);z-index:4;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.selbar .sep{width:1px;height:22px;background:var(--line);margin:0 6px}
+.lock{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:8px;padding:8px 12px;margin-bottom:10px}
+table{border-collapse:collapse;background:#fff}td,th{padding:7px 12px;border-bottom:1px solid var(--line);text-align:left}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--mute);margin:6px 0}.drop.hot{border-color:var(--acc);background:#eef4ff;color:var(--acc)}
+progress{width:320px;max-width:60vw;vertical-align:middle}
+details{margin-top:14px}summary{cursor:pointer;color:var(--mute)}pre.tree{background:var(--bg);border-radius:8px;padding:10px;font-size:13px;margin:8px 0 0}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d2330;color:#fff;padding:10px 18px;border-radius:8px;display:none;z-index:40;max-width:90vw;white-space:pre-line}
+#toast.err{background:var(--bad)}
+/* 편집 화면 */
+#ed{position:fixed;inset:0;background:#111827;display:none;z-index:20;color:#e5e7eb}
+#ed .wrap{display:flex;height:100%}
+#ed .stagebox{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px;position:relative}
+#ed .stage{position:relative;line-height:0;user-select:none}
+#ed .stage img{max-width:calc(100vw - 360px);max-height:calc(100vh - 20px);display:block}
+#ed .stage svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#ed .stage.draw svg{cursor:crosshair}
+#ed .side{width:340px;flex:0 0 340px;background:#1f2937;padding:12px;overflow:auto;font-size:13px}
+#ed .side .btn{background:#374151;border-color:#4b5563;color:#e5e7eb}#ed .side .btn.pri{background:var(--acc);border-color:var(--acc)}#ed .side .btn.ok{background:var(--ok);border-color:var(--ok)}#ed .side .btn.danger{background:var(--bad);border-color:var(--bad)}
+#ed .side .btn.danger-o{background:transparent;border-color:#f87171;color:#fca5a5}
+#ed .side .note{color:#9ca3af}
+#ed .lockd{background:#78350f;color:#fde68a;border-radius:6px;padding:6px 8px;margin:6px 0}
+#ed .ann{padding:6px;border-radius:8px;border:1px solid #374151;margin:5px 0;cursor:pointer}
+#ed .ann.sel{border-color:#fff;background:#111827}
+#ed .cls{display:flex;gap:4px;margin-top:4px}#ed .cls button{flex:1;font:inherit;font-size:12px;padding:4px 0;border-radius:6px;border:1px solid #4b5563;background:#374151;color:#e5e7eb;cursor:pointer}
+#ed .cls button.on{color:#fff;font-weight:700}
+#ed .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+#ed kbd{display:inline-block;min-width:20px;text-align:center;padding:0 5px;border-radius:4px;background:#374151;border:1px solid #4b5563;font:12px/18px ui-monospace,Consolas,monospace}
+#ed .keys td{padding:2px 6px;border:0;color:#d1d5db}#ed .keys{background:none}
+#ed .badge{position:absolute;top:14px;left:14px;line-height:1.4;background:rgba(0,0,0,.6);padding:4px 10px;border-radius:6px;font-size:13px}
+#ed label{cursor:pointer}
+</style></head><body>
+<header><div class="hrow"><h1>자세 자동 라벨</h1><span id="curw"></span></div>
+<div class="hrow"><nav><button data-t="home">프로젝트</button><button data-t="input">1. 사진 넣기</button><button data-t="analyze">2. 자동 분석</button><button data-t="review">3. 검수·수정</button><button data-t="export">4. 내보내기</button><button data-t="removed">제외된 사진</button></nav>
+<span id="jobmini"></span></div></header>
+<main id="main"></main>
+<div id="ed"></div><div id="toast"></div>
+<script>
+const NAMES=['lie','sit','stand'],KOR=['눕기','앉기','서기'],COL=['#ef4444','#2563eb','#16a34a'];
+const col=c=>COL[c]||'#888';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let W={works:[],rule:{}},WORK=localStorage.getItem('al_work')||'',tab='home',S=null,F={cls:'',st:'',sort:'name',page:0},JOBV=null;
+// SEL/SELR: 검수 목록·제외된 사진에서 고른 이름, SELA/SELRA: Shift 범위의 기준, RV/RV2: 지금 그린 목록, LASTMOVE: 방금 제외한 사진 (되돌리기용), UL: 올리기 상태
+let SEL=new Set(),SELA='',SELR=new Set(),SELRA='',RP=0,RV={L:[],P:[]},RV2={R:[],P:[]},LASTMOVE=null,UL=null,IPATH='',EXO={only:true,r:['100','0','0']};
+const PER=120;
+const ST=[['','전체'],['need','확인 필요'],['todo','검수 안 함'],['done','검수 완료'],['empty','사람 못 찾음'],['noan','분석 안 함']];
+const TL={home:'프로젝트',input:'1. 사진 넣기',analyze:'2. 자동 분석',review:'3. 검수·수정',export:'4. 내보내기',removed:'제외된 사진'};
+const KT={input:'사진 가져오기',analyze:'자동 분석',export:'내보내기'},TK={'사진 가져오기':'input','자동 분석':'analyze','내보내기':'export'};
+function toast(t,kind){const e=$('#toast');e.textContent=t;e.className=kind==='err'?'err':'';e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',kind==='err'?6000:3500)}
+const terr=e=>toast(e&&e.message?e.message:String(e),'err');
+async function api(p,body){let r,j;
+ try{r=await fetch(p,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{})}catch(e){throw new Error('서버에 연결하지 못했어요. 서버를 켠 명령창이 열려 있는지 확인해 주세요')}
+ try{j=await r.json()}catch(e){throw new Error('서버 응답을 읽지 못했어요 ('+r.status+')')}
+ if(!r.ok)throw new Error(j.error||r.status);return j}
+const img=(n,w)=>`/img?work=${encodeURIComponent(WORK)}&n=${encodeURIComponent(n)}&w=${w}`;
+const jobBusy=()=>!!(JOBV&&JOBV.busy);
+const ownJob=k=>jobBusy()&&JOBV.work===WORK&&JOBV.kind===k;
+const anaLock=()=>ownJob('자동 분석');
+const blockTxt=k=>jobBusy()&&!ownJob(k)?`지금 '${JOBV.kind}'이(가) 진행 중이라 끝난 뒤에 할 수 있어요.`:'';
+const pend=w=>w.pending!=null?w.pending:w.images-w.analyzed;
+
+// ---------------------------------------------------------------- 머리글
+function renderHead(){const w=cur(),c={};
+ if(WORK&&w.images){c.input=`<span class="cnt">${w.images}</span>`;
+  c.analyze=pend(w)?`<span class="cnt" style="color:var(--warn)">남음 ${pend(w)}</span>`:'<span class="cnt" style="color:var(--ok)">끝</span>';
+  c.review=`<span class="cnt">${w.reviewed}/${w.images}</span>`}
+ if(WORK&&w.removed)c.removed=`<span class="cnt">${w.removed}</span>`;
+ $$('nav button').forEach(b=>{const t=b.dataset.t;b.innerHTML=TL[t]+(c[t]||'');b.classList.toggle('on',t===tab);b.disabled=t!=='home'&&!WORK;b.title=b.disabled?'먼저 프로젝트를 만들거나 여세요':''});
+ $('#curw').innerHTML=WORK?`현재 프로젝트: <b>${esc(WORK)}</b>`:'<span style="color:var(--mute)">프로젝트를 열어 주세요</span>';
+ miniJob();setHH()}
+function setHH(){document.documentElement.style.setProperty('--hh',$('header').offsetHeight+'px')}
+function miniJob(){const m=$('#jobmini'),j=JOBV,p=[];let go='';
+ if(UL&&!UL.done)p.push(`사진 올리는 중 ${UL.k} / ${UL.n}`);
+ if(j&&j.busy){if(j.work===WORK){p.push(({'자동 분석':'자동 분석 중','사진 가져오기':'사진 가져오는 중','내보내기':'내보내는 중'}[j.kind]||j.kind+' 중')+(j.total?` ${j.done} / ${j.total}`:' …'));go=TK[j.kind]||''}
+  else p.push(`다른 프로젝트(${j.work})에서 ${j.kind} 중`)}
+ m.textContent=p.join(' · ');m.classList.toggle('go',!!go);m.title=go?'눌러서 진행 상황 보기':'';
+ m.onclick=go?()=>{if(!E&&tab!==go)goTab(go)}:null}
+
+// ---------------------------------------------------------------- 프로젝트
+async function loadWorks(){W=await api('/api/works');if(!W.works.some(w=>w.name===WORK))WORK='';renderHead()}
+async function loadState(){if(!WORK){S=null;return}const w=WORK,s=await api('/api/state?work='+encodeURIComponent(w));if(w!==WORK)return;s.by={};s.images.forEach(i=>s.by[i.n]=i);S=s}
+function render(){if(!WORK)tab='home';renderHead();
+ return ({home:rHome,input:rInput,analyze:rAnalyze,review:rReview,export:rExport,removed:rRemoved})[tab]()}
+function goTab(t){if(t!==tab){SEL.clear();SELR.clear();LASTMOVE=null}tab=t;render()}
+function nextTab(w){return !w.images?'input':pend(w)?'analyze':w.reviewed<w.images?'review':'export'}
+function openWork(n){if(n!==WORK){F={cls:'',st:'',sort:'name',page:0};SEL.clear();SELR.clear();SELA=SELRA='';RP=0;LASTMOVE=null;IPATH='';EXO={only:true,r:['100','0','0']}}
+ WORK=n;localStorage.setItem('al_work',n);S=null;tab=nextTab(cur());render()}
+function rHome(){const L=[...W.works].sort((a,b)=>b.mtime-a.mtime);
+ $('#main').innerHTML=`<div class="panel"><h2>새 프로젝트 만들기</h2>
+ <p class="note">사진 묶음마다 프로젝트를 따로 만들면 서로 섞이지 않아요.</p>
+ <div class="bar" style="margin:0"><input type="text" id="pnew" style="width:320px;max-width:100%" placeholder="프로젝트 이름 (예: 역사_1회차)"><button class="btn pri" id="pmk">만들고 시작하기</button></div>
+ <div class="err" id="perr"></div></div>
+ <div class="panel"><h2>프로젝트 열기 (${L.length})</h2>${L.length?`<table><tr><th>이름</th><th>사진</th><th>분석</th><th>검수 완료</th><th>마지막 수정</th><th></th></tr>
+ ${L.map(w=>{const on=w.name===WORK;return `<tr${on?' style="background:#eef4ff"':''}><td><b>${esc(w.name)}</b>${on?' <span class="tag" style="background:#2563eb22;color:var(--acc)">지금 열림</span>':''}</td><td>${w.images}</td><td>${w.analyzed}</td><td>${w.reviewed}</td><td>${new Date(w.mtime*1000).toLocaleString()}</td><td><button class="btn sm" data-open="${esc(w.name)}">${on?'계속하기':'열기'}</button> <button class="btn sm danger-o" data-del="${esc(w.name)}">삭제</button></td></tr>`}).join('')}</table>
+ <p class="note">삭제한 프로젝트는 바로 지워지지 않고 <b>trash</b> 폴더로 옮겨져요. 되살리려면 그 폴더를 work 폴더로 다시 옮기면 돼요.</p>`:`<p class="note">아직 프로젝트가 없어요. 위에서 이름을 적고 '만들고 시작하기'를 누르세요.</p>`}</div>`;
+ const chk=()=>{const n=$('#pnew').value.trim();let m='';
+  if(/[\\\/:*?"<>|]/.test(n))m='이름에 \\ / : * ? " < > | 는 쓸 수 없어요';
+  else if(/\.$/.test(n))m='프로젝트 이름은 점(.)으로 끝날 수 없어요';
+  else if(/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i.test(n))m='CON, PRN, AUX, NUL, COM1~9, LPT1~9 는 Windows 가 쓰는 이름이라 프로젝트 이름으로 쓸 수 없어요';
+  else if(n.length>60)m='프로젝트 이름은 60자까지 쓸 수 있어요';
+  else if(n&&W.works.some(w=>w.name.toLowerCase()===n.toLowerCase()))m='같은 이름의 프로젝트가 이미 있어요';
+  $('#perr').textContent=m;$('#pmk').disabled=!!m;return m};
+ const mk=async()=>{if(chk())return;const n=$('#pnew').value.trim();if(!n){$('#perr').textContent='프로젝트 이름을 적어 주세요';return}
+  $('#pmk').disabled=true;try{await api('/api/new',{name:n});await loadWorks()}catch(e){$('#pmk').disabled=false;$('#perr').textContent=e.message;return terr(e)}openWork(n)};
+ $('#pnew').oninput=chk;$('#pmk').onclick=mk;$('#pnew').onkeydown=e=>{if(e.key==='Enter')mk()};
+ $$('[data-open]').forEach(b=>b.onclick=()=>openWork(b.dataset.open));
+ $$('[data-del]').forEach(b=>b.onclick=async()=>{const n=b.dataset.del,w=W.works.find(x=>x.name===n)||{};
+  const t=prompt(`'${n}' 프로젝트를 삭제할까요? (사진 ${w.images}장, 검수 완료 ${w.reviewed}장)\n목록에서 사라지고 trash 폴더로 옮겨져요.\n확인하려면 프로젝트 이름을 똑같이 적으세요.`);
+  if(t===null)return;if(t.trim()!==n)return toast('이름이 달라서 삭제하지 않았어요','err');
+  try{await api('/api/delete_work',{name:n})}catch(e){return terr(e)}
+  if(WORK===n){WORK='';localStorage.removeItem('al_work');S=null;SEL.clear();SELR.clear();LASTMOVE=null}toast(`'${n}' 삭제 (trash 로 옮김)`);await loadWorks().catch(terr);render()})}
+$$('nav button').forEach(b=>b.onclick=()=>goTab(b.dataset.t));
+$('#main').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b&&!b.disabled)goTab(b.dataset.go)});
+const cur=()=>W.works.find(w=>w.name===WORK)||{images:0,analyzed:0,reviewed:0,pending:0,removed:0,labeled:0,reviewed_labeled:0};
+
+// ---------------------------------------------------------------- 진행 상황 (작업은 서버에서 한 번에 하나)
+async function pollJob(){if(pollJob.busy){pollJob.again=1;return}pollJob.busy=1;clearTimeout(pollJob.t);
+ try{const j=await api('/api/job'),p=JOBV,sig=x=>x&&x.busy?x.kind+'|'+x.work:'';JOBV=j;
+  if(!j.busy&&((p&&p.busy)||(pollJob.want&&j.seq>=pollJob.want))){pollJob.want=0;await jobDone(j)}
+  else if(sig(p)!==sig(j))refresh();
+  else{miniJob();const b=$('#jobbox');if(b&&KT[tab])b.innerHTML=jobHtml(KT[tab]);const lb=$('#lockbar');if(lb&&anaLock())lb.textContent=lockTxt()}
+ }catch(e){console.error(e)}
+ finally{pollJob.busy=0;pollJob.t=setTimeout(pollJob,pollJob.again?0:jobBusy()?600:4000);pollJob.again=0}}
+async function jobDone(j){const r=j.result||{};
+ if(j.err)toast(`${j.kind} 실패: ${j.err}`,'err');
+ else if(j.kind==='사진 가져오기')toast(`사진 가져오기 끝: 새로 ${r.copied}장 · 건너뜀 ${(r.skipped||0)+(r.skipped_removed||0)+(r.skipped_stem||0)+(r.skipped_broken||0)}장${r.labels?` · 라벨 ${r.labels}장 (자동 분석 없이 바로 검수할 수 있어요)`:''}`);
+ else if(j.kind==='자동 분석')toast(`자동 분석 끝: ${r.analyzed}장 · ${r.sec}초${r.failed?` · 분석 못 한 사진 ${r.failed}장 (열 수 없는 사진일 수 있어요)`:''}`,r.failed?'err':'');
+ else if(j.kind==='내보내기'){const m=r.images||{};toast(`내보내기 끝: 사진 ${(m.train||0)+(m.valid||0)+(m.test||0)}장`)}
+ try{await loadWorks()}catch(e){}
+ // 사진·라벨이 바뀌는 일(가져오기·분석)만 목록을 다시 읽음. 목록 화면이면 읽은 뒤 바꿔 그려서 '불러오는 중'으로 깜빡이지 않게
+ if(j.work===WORK&&j.kind!=='내보내기'){if(tab==='review'||tab==='removed'){try{await loadState()}catch(e){S=null}}else S=null}
+ refresh(true)}
+// 작업이 시작·끝날 때 화면을 맞춤. 입력칸 초점·커서와 스크롤은 그대로 둠 (fin: 작업이 끝났을 때)
+function refresh(fin){if(E&&!E.drag)drawEd();
+ if(tab==='home'&&$('#pnew')&&$('#pnew').value)return renderHead();
+ if(tab==='export'&&$('#ex')){renderHead();$('#jobbox').innerHTML=jobHtml('내보내기');updExport();if(fin){showExportResult();loadExHist()}return}
+ const a=document.activeElement,id=a&&a!==document.body?a.id:'',ss=id&&a.type==='text'?[a.selectionStart,a.selectionEnd]:null,y=scrollY;
+ Promise.resolve(render()).then(()=>{scrollTo(0,y);const e=id&&!E&&document.getElementById(id);if(e){e.focus({preventScroll:true});if(ss)try{e.setSelectionRange(ss[0],ss[1])}catch(x){}}})}
+function jobHtml(kind){const j=JOBV;if(!j||j.work!==WORK||j.kind!==kind)return'';
+ if(j.busy)return j.total?`<progress max="${j.total}" value="${j.done}"></progress> ${j.done} / ${j.total}장 <span class="note">${esc(j.msg)}</span>`:`<progress></progress> 준비 중… <span class="note">${esc(j.msg)}</span>`;
+ if(j.err)return `<span style="color:var(--bad)">마지막 ${esc(j.kind)} 실패: ${esc(j.err)}</span>`;
+ const r=j.result;if(!r)return'';
+ if(kind==='사진 가져오기')return `<span class="stat">${!r.copied&&r.skipped?`새로 복사한 사진이 없어요. 같은 이름 사진 ${r.skipped}장이 이미 있어요.`:`새로 복사 ${r.copied}장 · 이미 있어서 건너뜀 ${r.skipped}장`}${r.skipped_removed?` · 제외된 사진과 이름이 같아 건너뜀 ${r.skipped_removed}장`:''}${skipMore(r.skipped_stem,r.skipped_broken)}${labMore(r.labels)}</span>`;
+ if(kind==='자동 분석'&&r.mode!=='one')return `<span class="stat">분석 ${r.analyzed}장 · ${r.sec}초${r.failed?` · <span style="color:var(--bad)">분석 못 한 사진 ${r.failed}장 (열 수 없는 사진일 수 있어요)</span>`:''}</span>`;return''}
+const labMore=(lb,has,nm)=>`${lb?` · <b>라벨도 가져옴 ${lb}장</b> (자동 분석 없이 '3. 검수·수정'에서 바로 검수)`:''}${has?` · 이미 라벨·분석 결과가 있어 라벨을 넣지 않음 ${has}장`:''}${nm?` · 짝 사진이 없는 .txt ${nm}개는 건너뜀`:''}`;
+const skipMore=(st,br)=>`${st?` · 확장자만 다른 같은 이름 사진이 있어 건너뜀 ${st}장`:''}${br?` · <span style="color:var(--bad)">열 수 없는 사진이라 건너뜀 ${br}장</span>`:''}`;
+async function startJob(p,body,btn){if(btn)btn.disabled=true;try{const r=await api(p,body);pollJob.want=r.seq||0;pollJob()}catch(e){if(btn)btn.disabled=false;terr(e)}}
+
+// ---------------------------------------------------------------- 1. 사진 넣기
+function rInput(){const w=cur(),blk=blockTxt('사진 가져오기');
+ $('#main').innerHTML=`<div class="panel"><h2>1. 사진 넣기</h2>
+ <p class="note">사진은 프로젝트 안으로 복사돼요. 원래 폴더의 사진은 그대로예요.</p>
+ <div class="two"><div class="sub"><h3>폴더에서 가져오기</h3><p class="note">이 컴퓨터의 폴더를 골라 하위 폴더 사진까지 모두 복사해요. 사진이 많을 때 빨라요.</p>
+ <input type="text" id="ipath" style="width:100%" placeholder="폴더 경로 (예: C:\\Users\\...\\사진폴더)" value="${esc(IPATH)}">
+ <div class="bar" style="margin:8px 0 0"><button class="btn" id="pick">찾아보기…</button><button class="btn${w.images?'':' pri'}" id="imp" ${jobBusy()?'disabled':''} title="${esc(blk)}">가져오기</button></div>
+ ${blk?`<p class="note" style="margin-bottom:0">${esc(blk)}</p>`:''}</div>
+ <div class="sub"><h3>끌어다 놓기 / 골라서 올리기</h3><div class="drop" id="dz">폴더나 사진을 여기에 끌어다 놓으세요<br><button class="btn" id="ufd" style="margin-top:8px">폴더 고르기</button> <button class="btn" id="uff">사진 고르기</button>
+ <input type="file" id="ufdi" webkitdirectory directory multiple hidden><input type="file" id="uffi" multiple accept="image/*" hidden></div>
+ <p class="note" style="margin-bottom:0">다른 컴퓨터에서 접속했다면 이 방법을 쓰세요.</p></div></div>
+ <div id="jobbox" style="margin-top:12px">${jobHtml('사진 가져오기')}</div><div id="ul" style="margin-top:6px"></div>
+ <p class="note">하위 폴더의 사진은 '하위폴더__파일이름' 으로 저장돼요. 이름이 같은 사진이 이미 있거나 제외된 사진과 이름이 같으면 건너뛰어요.</p>
+ <p class="note">이미 라벨이 있는 폴더(YOLO 구조 images/ · labels/, 또는 사진 옆의 같은 이름 .txt)는 라벨도 같이 가져와서, 자동 분석 없이 바로 검수할 수 있어요. 클래스 번호는 0 눕기 · 1 앉기 · 2 서기여야 해요. 사진만 먼저 가져온 폴더를 다시 가져오면 라벨만 채워져요.</p>
+ <p>지금 이 프로젝트: 사진 ${w.images}장 · 제외된 사진 ${w.removed||0}장</p>
+ <p class="note">잘못 넣은 사진은 '3. 검수·수정'에서 여러 장 골라 한 번에 뺄 수 있어요.</p>
+ ${w.images?'<div style="text-align:right"><button class="btn pri" data-go="analyze">다음: 자동 분석 →</button></div>':''}</div>`;
+ updUL();
+ $('#ipath').oninput=e=>IPATH=e.target.value;
+ $('#pick').onclick=async()=>{try{const r=await api('/api/pick',{});if(r.path){$('#ipath').value=IPATH=r.path}}catch(e){terr(e)}};
+ $('#imp').onclick=e=>{const p=$('#ipath').value.trim();if(!p)return toast("폴더 경로를 적거나 '찾아보기…'를 눌러 주세요",'err');startJob('/api/import',{work:WORK,path:p},e.currentTarget)};
+ $('#ufd').onclick=()=>$('#ufdi').click();$('#uff').onclick=()=>$('#uffi').click();
+ const strip=p=>p.split('/').slice(1).join('/')||p; // 고른 폴더 이름 자체는 빼고 그 안의 경로만
+ $('#ufdi').onchange=e=>upload([...e.target.files].map(f=>({f,path:strip(f.webkitRelativePath||f.name)})));
+ $('#uffi').onchange=e=>upload([...e.target.files].map(f=>({f,path:f.name})));
+ const dz=$('#dz');dz.ondragover=e=>{e.preventDefault();dz.classList.add('hot')};dz.ondragleave=()=>dz.classList.remove('hot');
+ dz.ondrop=async e=>{e.preventDefault();dz.classList.remove('hot');const items=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);
+  const out=[];const kids=async en=>{const rd=en.createReader(),all=[];let b;do{b=await new Promise((ok,no)=>rd.readEntries(ok,no));all.push(...b)}while(b.length);return all};
+  const walk=async(en,pre)=>{if(en.isFile){const f=await new Promise((ok,no)=>en.file(ok,no));out.push({f,path:pre+f.name})}else if(en.isDirectory){for(const c of await kids(en))await walk(c,pre+en.name+'/')}};
+  // 끌어다 놓은 폴더는 그 폴더 이름을 빼고 안쪽 경로만 씀 (폴더 고르기 버튼과 같게)
+  for(const en of items){if(en.isDirectory){for(const c of await kids(en))await walk(c,'')}else await walk(en,'')}upload(out)}}
+function ulHtml(){const u=UL;if(!u||u.work!==WORK)return'';
+ if(!u.done)return `<progress max="${u.n}" value="${u.k}"></progress> 올리는 중 ${u.k} / ${u.n}장 — ${esc(u.name)} <button class="btn sm" id="ulstop" ${u.stop?'disabled':''}>중지</button>`;
+ return `<span class="stat">올림 ${u.ok}장 · 이미 있어서 건너뜀 ${u.exists}장${u.other?` <span style="color:var(--bad)">· 실패 ${u.other}장</span>`:''}${u.removed?` · 제외된 사진과 이름이 같아 건너뜀 ${u.removed}장`:''}${skipMore(u.stem,u.broken)}${labMore(u.lab,u.haslab,u.nomatch)}${u.stop?' · 중지함':''}</span>`}
+function updUL(){const e=$('#ul');if(e){e.innerHTML=ulHtml();const b=$('#ulstop');if(b)b.onclick=()=>{if(UL)UL.stop=true;b.disabled=true}}miniJob()}
+// 올리기 시작 때의 프로젝트 이름(work)으로 끝까지 올림 — 도중에 프로젝트나 탭을 바꿔도 섞이지 않게
+async function upload(list){const isImg=x=>/\.(jpe?g|png|bmp|webp|tiff?)$/i.test(x.f.name),isTxt=x=>/\.txt$/i.test(x.f.name);
+ list=[...list.filter(isImg),...list.filter(isTxt)];if(!list.length)return toast('올릴 사진이 없어요','err'); // 라벨은 짝 사진이 올라간 뒤에
+ if(UL&&!UL.done)return toast('이미 사진을 올리는 중이에요. 끝나거나 중지한 뒤에 다시 해 주세요','err');
+ const work=WORK,u=UL={work,k:0,n:list.length,name:'',ok:0,lab:0,haslab:0,nomatch:0,exists:0,removed:0,stem:0,broken:0,other:0,stop:false,done:false};
+ for(let k=0;k<list.length&&!u.stop;k++){const{f,path}=list[k];u.name=f.name;updUL();
+  try{const r=await fetch(`/api/upload?work=${encodeURIComponent(work)}&name=${encodeURIComponent(path)}`,{method:'POST',body:f});const j=await r.json();if(!r.ok)throw new Error(j.error);
+   j.label?u.lab++:j.ok?u.ok++:j.skip==='haslabel'||j.skip==='busy'?u.haslab++:j.skip==='nomatch'?u.nomatch++:j.skip==='exists'?u.exists++:j.skip==='removed'?u.removed++:j.skip==='stem'?u.stem++:j.skip==='broken'?u.broken++:u.other++}catch(e){u.other++}
+  u.k=k+1}
+ u.done=true;try{await loadWorks()}catch(e){}if(WORK===work)S=null;
+ if(tab==='input'&&WORK===work)rInput();else{toast(`${u.ok}장 올렸어요 (${work})`);updUL()}}
+
+// ---------------------------------------------------------------- 2. 자동 분석
+function rAnalyze(){const w=cur(),r=W.rule||{},pn=pend(w),todo=w.images-w.reviewed,own=anaLock(),busy=jobBusy(),blk=blockTxt('자동 분석'),j=JOBV;
+ const res=!!(j&&!j.busy&&!j.err&&j.work===WORK&&j.kind==='자동 분석'&&j.result&&j.result.mode!=='one');
+ const conf=localStorage.getItem('al_conf')||'0.35',isz=localStorage.getItem('al_imgsz')||'960';
+ let top='';
+ if(!w.images)top=`<p class="note" style="margin:0">먼저 '1. 사진 넣기'에서 사진을 넣어 주세요.</p><button class="btn" data-go="input">1. 사진 넣기로 →</button>`;
+ else if(pn)top=`<button class="btn${res?'':' pri'}" id="anew" ${busy?'disabled':''} title="${esc(blk)}">분석 안 한 사진 ${pn}장 분석하기</button>`;
+ else if(!res)top='<button class="btn pri" id="gorv">다음: 검수·수정 →</button>';
+ $('#main').innerHTML=`<div class="panel"><h2>2. 자동 분석</h2>
+ <p><span class="stat">사진 ${w.images}장 · 분석 끝 ${w.analyzed}장 · 분석 전 ${pn}장 · 검수 완료 ${w.reviewed}장</span></p>
+ ${top?`<div class="bar">${top}</div>`:''}${blk&&w.images&&(pn||todo)?`<p class="note">${esc(blk)}</p>`:''}
+ <div class="bar" style="margin-bottom:0"><b>설정</b> <label>사람 검출 최소 점수 <input type="number" id="aconf" value="${esc(conf)}" step="0.05" min="0.05" max="0.9" style="width:80px" ${own?'disabled':''}></label>
+ <label>모델 입력 크기 <select id="aimg" ${own?'disabled':''}>${['640','960','1280'].map(v=>`<option${v===isz?' selected':''}>${v}</option>`).join('')}</select></label></div>
+ <p class="note">사람을 놓치면 점수를 낮추고, 멀리 있는 작은 사람이 많으면 1280 (느려져요).</p>
+ <div id="jobbox">${jobHtml('자동 분석')}</div>
+ ${res&&w.images?'<p><button class="btn pri" id="goneed">검수하러 가기: 확인 필요 사진부터 →</button></p>':''}
+ <h3 class="sec">다시 분석</h3><p class="note">설정을 바꿨거나 결과가 마음에 들지 않을 때. 검수 완료한 사진은 건드리지 않아요.</p>
+ <button class="btn danger-o" id="aredo" ${!w.images||!todo||busy?'disabled':''} title="${esc(blk||(!w.images?'사진이 없어요':!todo?'검수 안 한 사진이 없어요':''))}">검수 안 한 사진 ${todo}장 다시 분석</button>
+ <details><summary>자동 분석은 어떻게 판단하나요?</summary><p class="note">① 사람 검출 모델(YOLO11 detect)로 사람 bbox → ② 포즈 관절 모델(YOLO11 pose)로 어깨·엉덩이·무릎·발목 → ③ 몸통 기울기·무릎 각도·허벅지 각도·다리 길이·박스 비율 규칙으로 <b>0 눕기 / 1 앉기 / 2 서기</b>를 정해요.<br>
+ 규칙 판단은 정답이 아니에요. 점수가 ${esc(r.review_conf)} 미만이거나 사람을 못 찾은 사진은 검수 화면에서 <b style="color:var(--warn)">확인 필요</b>로 표시돼요.</p></details></div>`;
+ const opt=()=>{const c=+$('#aconf').value;if(!(c>=0.05&&c<=0.9)){toast('사람 검출 최소 점수는 0.05 ~ 0.9 사이로 적어 주세요','err');return null}return{work:WORK,conf:c,imgsz:+$('#aimg').value}};
+ $('#aconf').oninput=e=>localStorage.setItem('al_conf',e.target.value);$('#aimg').onchange=e=>localStorage.setItem('al_imgsz',e.target.value);
+ if($('#anew'))$('#anew').onclick=e=>{const b=e.currentTarget,o=opt();if(o)startJob('/api/analyze',{...o,mode:'new'},b)};
+ $('#aredo').onclick=e=>{const b=e.currentTarget,o=opt();if(!o)return;
+  if(confirm(`검수 완료하지 않은 사진 ${todo}장을 다시 분석해요.\n이 사진들에서 직접 고친 박스도 자동 결과로 바뀌어요. (검수 완료한 사진은 그대로예요)\n오늘 처음 고치기 전의 라벨만 프로젝트의 _backup 폴더에 남아요.\n진행할까요?`))startJob('/api/analyze',{...o,mode:'redo'},b)};
+ if($('#gorv'))$('#gorv').onclick=()=>{F.st='';F.page=0;goTab('review')};
+ if($('#goneed'))$('#goneed').onclick=()=>{F.st='need';F.page=0;goTab('review')}}
+
+// ---------------------------------------------------------------- 3. 검수 (목록)
+function svgN(i){let h=`<svg viewBox="0 0 ${i.w} ${i.h}" preserveAspectRatio="none">`;i.anns.forEach(a=>{const[x1,y1,x2,y2]=a.box;
+ h+=`<rect x="${x1}" y="${y1}" width="${x2-x1}" height="${y2-y1}" fill="${col(a.c)}" fill-opacity=".1" stroke="${col(a.c)}" vector-effect="non-scaling-stroke" style="stroke-width:2px"/>`});return h+'</svg>'}
+function tags(i){const n={};i.anns.forEach(a=>n[a.c]=(n[a.c]||0)+1);return Object.keys(n).sort().map(c=>`<span class="tag" style="background:${col(+c)}22;color:${col(+c)}">${c} ${KOR[c]||'?'} ×${n[c]}</span>`).join('')}
+const minConf=i=>{const v=i.anns.filter(a=>a.auto).map(a=>a.auto.conf);return v.length?Math.min(...v):1};
+function filtered(){let L=S.images.filter(i=>(F.cls===''||i.anns.some(a=>a.c==F.cls))&&({'':1,need:i.need,todo:!i.reviewed,done:i.reviewed,empty:i.analyzed&&!i.anns.length,noan:!i.analyzed&&!i.has_label})[F.st]);
+ if(F.sort==='conf')L=[...L].sort((a,b)=>minConf(a)-minConf(b));return L}
+const lockTxt=()=>`자동 분석 중이에요 ${JOBV.total?`(${JOBV.done} / ${JOBV.total})`:'(준비 중… 모델 불러오는 중)'}. 끝나면 목록이 새로 고쳐지고, 그때 검수할 수 있어요.`;
+const pager=(id,p,n)=>n>1?`<div class="bar"><button class="btn sm" data-${id}="-1" ${p?'':'disabled'}>◀</button> ${p+1} / ${n} <button class="btn sm" data-${id}="1" ${p<n-1?'':'disabled'}>▶</button></div>`:'';
+function listFail(e,again){$('#main').innerHTML=`<div class="panel"><p class="err">사진 목록을 불러오지 못했어요: ${esc(e.message)}</p><button class="btn" id="retry">다시 시도</button></div>`;$('#retry').onclick=()=>{S=null;again()}}
+async function rReview(){if(!S){$('#main').innerHTML='<p class="note">사진 목록을 불러오는 중…</p>';try{await loadState()}catch(e){if(tab==='review')listFail(e,rReview);return}if(tab!=='review'||!S)return}
+ if(!S.images.length){$('#main').innerHTML='<div id="mvres"></div><div class="panel"><p>아직 사진이 없어요.</p><button class="btn" data-go="input">1. 사진 넣기로 →</button></div>';updMv();return}
+ for(const n of [...SEL])if(!S.by[n])SEL.delete(n);
+ const L=filtered(),pages=Math.max(1,Math.ceil(L.length/PER));
+ if(F.focus){const x=L.findIndex(i=>i.n===F.focus);if(x>=0)F.page=Math.floor(x/PER)}
+ F.page=Math.max(0,Math.min(F.page,pages-1));const P=L.slice(F.page*PER,(F.page+1)*PER);RV={L,P};
+ const lock=anaLock(),cnt={'':S.images.length,need:0,todo:0,done:0,empty:0,noan:0};
+ S.images.forEach(i=>{if(i.need)cnt.need++;if(i.reviewed)cnt.done++;else cnt.todo++;if(i.analyzed&&!i.anns.length)cnt.empty++;if(!i.analyzed&&!i.has_label)cnt.noan++});
+ const EL=L.filter(i=>!i.broken),nBox=Object.values(S.counts).reduce((a,b)=>a+b,0),left=EL.filter(i=>!i.reviewed).length; // EL: 편집 화면에서 넘겨 볼 목록 (열 수 없는 사진 뺌)
+ const seg=ST.map(([v,t])=>`<button data-st="${v}" class="${F.st===v?'on':''}${cnt[v]?'':' zero'}">${t}<span class="sc"${v==='need'?' style="color:var(--warn)"':v==='done'?' style="color:var(--ok)"':''}>${cnt[v]}</span></button>`).join('');
+ const pg=pager('pg',F.page,pages);
+ $('#main').innerHTML=`<div class="seg">${seg}</div>
+ <div class="bar" style="margin-bottom:4px">자세 <select id="fc"><option value="">모든 자세</option>${[0,1,2].map(c=>`<option value="${c}" ${F.cls===String(c)?'selected':''}>${c} ${KOR[c]} 박스 있는 사진</option>`).join('')}</select>
+ 정렬 <select id="fso"><option value="name" ${F.sort==='name'?'selected':''}>이름순</option><option value="conf" ${F.sort==='conf'?'selected':''}>자동 점수 낮은 순</option></select>
+ <span>맞는 사진 ${L.length}장</span>
+ <span style="margin-left:auto">${left?`<button class="btn pri" id="cont" ${lock?'disabled':''}>이어서 검수하기 (남은 ${left}장)</button>`:`<button class="btn" id="cont" ${!EL.length||lock?'disabled':''}>처음부터 보기</button>`}</span></div>
+ <p class="note" style="font-size:12px;margin-top:0">박스 ${nBox}개: ${[0,1,2].map(c=>`${KOR[c]} ${S.counts[c]||0}`).join(' · ')}</p>
+ ${lock?`<div class="lock" id="lockbar">${esc(lockTxt())}</div>`:''}
+ <p class="note">사진을 누르면 편집 화면이 열려요. 왼쪽 위 네모를 눌러 여러 장을 고를 수 있어요 (Shift 로 범위 선택). 주황 테두리 = 확인 필요, 초록 = 검수 완료.</p>
+ <div class="selbar" id="selbar"></div><div id="mvres"></div>
+ ${L.length?`${pg}<div class="grid" id="grid">${P.map((i,k)=>`<div class="card ${i.reviewed?'done':i.need?'need':''}${SEL.has(i.n)?' sel':''}" data-k="${k}"><div class="pic"><img loading="lazy" ${i.w?`width="${i.w}" height="${i.h}" `:''}src="${img(i.n,400)}">${svgN(i)}<span class="chk" title="고르기 (Shift 로 범위)">✓</span></div>
+ <div class="cap"><div class="nm">${esc(i.n)}</div>${i.broken?'<b style="color:var(--bad)">열 수 없는 사진</b>':i.analyzed?(tags(i)||'<b style="color:var(--warn)">사람 못 찾음</b>'):i.has_label?(tags(i)||'<b>빈 라벨</b>'):'<b>분석 안 함</b>'}
+ ${i.reviewed?'<span class="tag" style="background:#16a34a22;color:var(--ok)">검수 완료</span>':i.need?`<span class="tag" style="background:#d9770622;color:var(--warn)">확인 필요${i.anns.length?' '+minConf(i).toFixed(2):''}</span>`:''}</div></div>`).join('')}</div>${pg}`
+ :'<p class="note">이 조건에 맞는 사진이 없어요. <button class="lnk" id="showall">전체 보기</button></p>'}`;
+ $$('.seg [data-st]').forEach(b=>b.onclick=()=>{if(F.st===b.dataset.st)return;F.st=b.dataset.st;F.page=0;SEL.clear();rReview()});
+ $('#fc').onchange=e=>{F.cls=e.target.value;F.page=0;SEL.clear();rReview()};$('#fso').onchange=e=>{F.sort=e.target.value;rReview()};
+ $$('[data-pg]').forEach(b=>b.onclick=()=>{F.page+=+b.dataset.pg;rReview();scrollTo(0,0)});
+ if($('#showall'))$('#showall').onclick=()=>{F.st='';F.cls='';F.page=0;SEL.clear();rReview()};
+ $('#cont').onclick=()=>{if(anaLock())return;const x=EL.findIndex(i=>!i.reviewed);openEd(EL,x<0?0:x)};
+ if($('#grid'))$('#grid').onclick=ev=>{const c=ev.target.closest('.card');if(!c)return;const k=+c.dataset.k,i=P[k];
+  if(ev.target.closest('.chk'))return pick(i.n,ev.shiftKey);
+  if(i.broken)return toast("열 수 없는 사진이에요. 왼쪽 위 네모로 고른 뒤 '제외하기'로 빼 주세요",'err');
+  if(anaLock())return toast('자동 분석이 끝난 뒤에 열 수 있어요');openEd(EL,EL.indexOf(i))};
+ updSel();updMv();
+ if(F.focus){const x=P.findIndex(i=>i.n===F.focus);F.focus='';const c=x>=0&&$(`#grid .card[data-k="${x}"]`);if(c)c.scrollIntoView({block:'center'})}}
+// 체크 상자: Shift 를 누르면 마지막으로 누른 사진부터 이 사진까지 (지금 목록 순서, 페이지를 넘어도 됨)
+function pick(n,shift){const L=RV.L,on=!SEL.has(n);let names=[n];
+ if(shift&&SELA&&SELA!==n){const a=L.findIndex(i=>i.n===SELA),b=L.findIndex(i=>i.n===n);if(a>=0&&b>=0)names=L.slice(Math.min(a,b),Math.max(a,b)+1).map(i=>i.n)}
+ names.forEach(x=>on?SEL.add(x):SEL.delete(x));SELA=n;updSel()}
+function updSel(){const b=$('#selbar');if(!b)return;const{L,P}=RV,s=SEL.size,lock=anaLock(),dis=!s||lock?`disabled${s?'':' title="먼저 사진을 골라 주세요"'}`:'';
+ $$('#grid .card').forEach(c=>c.classList.toggle('sel',SEL.has(P[+c.dataset.k].n)));
+ b.innerHTML=`<b>선택 ${s}장</b> <button class="btn sm" id="sp" ${!P.length||lock?'disabled':''}>이 페이지 모두 선택</button>${L.length>PER?` <button class="btn sm" id="sa" ${lock?'disabled':''}>조건에 맞는 ${L.length}장 모두 선택</button>`:''} <button class="btn sm" id="sn" ${!s||lock?'disabled':''}>선택 해제</button>
+ <span class="sep"></span><button class="btn" id="bmk" ${dis}>검수 완료로 표시</button> <button class="btn" id="bun" ${dis}>검수 완료 취소</button> <button class="btn danger-o" id="brm" ${dis}>제외하기</button>`;
+ $('#sp').onclick=()=>{P.forEach(i=>SEL.add(i.n));updSel()};if($('#sa'))$('#sa').onclick=()=>{L.forEach(i=>SEL.add(i.n));updSel()};$('#sn').onclick=()=>{SEL.clear();updSel()};
+ $('#bmk').onclick=()=>bulkMark(true);$('#bun').onclick=()=>bulkMark(false);$('#brm').onclick=bulkRemove}
+// 일괄 동작이 끝날 때까지 선택 줄 버튼을 막음 (사진이 많으면 몇 초 걸림)
+function selBusy(){$$('#selbar button,#selbarr button').forEach(b=>b.disabled=true);const x=$('#selbar b,#selbarr b');if(x)x.textContent='처리하는 중…'}
+async function reloadList(){try{await loadState()}catch(e){S=null}try{await loadWorks()}catch(e){}if(tab==='review')rReview();else if(tab==='removed')rRemoved()}
+async function bulkMark(on){const names=[...SEL];let t=names;
+ if(on){t=names.filter(n=>{const i=S.by[n];return i&&(i.analyzed||i.has_label)});const m=names.length-t.length;
+  if(!t.length)return toast('분석 안 한 사진은 검수 완료로 표시할 수 없어요. 먼저 자동 분석을 하세요.','err');
+  if(!confirm(`선택한 ${t.length}장을 지금 박스 그대로 검수 완료로 표시할까요?\n박스를 하나씩 확인한 사진에만 쓰세요.${m?`\n(분석 안 한 사진 ${m}장은 빼고 표시해요)`:''}`))return}
+ selBusy();let r;try{r=await api('/api/mark',{work:WORK,names:t,reviewed:on})}catch(e){updSel();return terr(e)}
+ const k=r.n!=null?r.n:t.length;toast(on?`${k}장을 검수 완료로 표시했어요`:`${k}장의 검수 완료 표시를 취소했어요`);SEL.clear();LASTMOVE=null;reloadList()}
+async function bulkRemove(){const names=[...SEL];
+ if(!confirm(`선택한 ${names.length}장을 제외할까요?\n사진과 라벨이 '제외된 사진'으로 옮겨져 분석·검수·내보내기에서 빠져요.\n지워지지 않고, 언제든 되돌릴 수 있어요.`))return;
+ selBusy();let r;try{r=await api('/api/move',{work:WORK,names,to:'removed'})}catch(e){updSel();return terr(e)}
+ const sk=new Set(r.skipped||[]);LASTMOVE={work:WORK,names:names.filter(n=>!sk.has(n)),moved:r.moved,skipped:sk.size};SEL.clear();reloadList()}
+const restoreMsg=r=>{const k=(r.skipped||[]).length;return k?`${r.moved}장을 되돌렸어요. 같은 이름 사진이 이미 있어서 ${k}장은 그대로 두었어요.`:`${r.moved}장을 되돌렸어요`};
+function updMv(){const e=$('#mvres');if(!e)return;const m=LASTMOVE;if(!m||m.work!==WORK){e.innerHTML='';return}
+ e.innerHTML=`<p class="stat" style="display:inline-block;margin:0 0 10px">${m.moved}장을 제외했어요.${m.moved?' <button class="lnk" id="mvundo">되돌리기</button>':''}${m.skipped?` 같은 이름 파일이 있어 ${m.skipped}장은 그대로 두었어요.`:''}</p>`;
+ if($('#mvundo'))$('#mvundo').onclick=async ev=>{const bt=ev.currentTarget;bt.disabled=true;let r;try{r=await api('/api/move',{work:WORK,names:m.names,to:'restore'})}catch(e){bt.disabled=false;return terr(e)}
+  LASTMOVE=null;toast(restoreMsg(r));reloadList()}}
+
+// ---------------------------------------------------------------- 3. 검수 (편집 화면)
+let E=null;
+const clone=o=>JSON.parse(JSON.stringify(o));
+const HANDLES=['nw','n','ne','e','se','s','sw','w'];
+function openEd(list,k){E={list,k,anns:[],sel:-1,hist:[],fut:[],dirty:false,draw:false,hide:false,kp:localStorage.getItem('al_kp')!=='0',auto:[],newCls:+(localStorage.getItem('al_cls')||2),drag:null,help:localStorage.getItem('al_help')!=='0',
+ fk:F.st+'|'+F.cls+'|'+F.sort,fname:F.st?(ST.find(x=>x[0]===F.st)||['',''])[1]:''};loadEd()}
+async function loadEd(){const i=E.list[E.k];E.anns=clone(i.anns);E.sel=-1;E.hist=[];E.fut=[];E.dirty=false;E.auto=[];drawEd();
+ try{const r=await api(`/api/auto?work=${encodeURIComponent(WORK)}&n=${encodeURIComponent(i.n)}`);if(E&&E.list[E.k]===i){E.auto=r.persons;drawSvg()}}catch(e){}}
+function snap(){E.hist.push(clone(E.anns));if(E.hist.length>100)E.hist.shift();E.fut=[];E.dirty=true}
+function undo(){if(!E.hist.length)return;E.fut.push(clone(E.anns));E.anns=E.hist.pop();E.sel=Math.min(E.sel,E.anns.length-1);E.dirty=true;drawEd()}
+function redo(){if(!E.fut.length)return;E.hist.push(clone(E.anns));E.anns=E.fut.pop();E.dirty=true;drawEd()}
+function drawEd(){const i=E.list[E.k];$('#ed').style.display='block';
+ $('#ed').innerHTML=`<div class="wrap"><div class="stagebox"><div class="badge" id="badge"></div><div class="stage ${E.draw?'draw':''}" id="stage"><img id="edimg" src="${img(i.n,1920)}" draggable="false"><svg id="eds" viewBox="0 0 ${i.w} ${i.h}" preserveAspectRatio="none"></svg></div></div>
+ <div class="side"><div class="row" style="justify-content:space-between"><b>${E.fname?esc(E.fname)+' · ':''}${E.k+1} / ${E.list.length}</b><span><button class="btn sm" id="pv">◀ A</button> <button class="btn sm" id="nx">D ▶</button> <button class="btn sm" id="cl">닫기 Esc</button></span></div>
+ ${anaLock()?'<div class="lockd">자동 분석 중이에요. 끝날 때까지 저장·검수 완료·사진 빼기를 할 수 없어요. 고친 내용은 화면에 남아 있어요.</div>':''}
+ <div class="note" style="word-break:break-all">${esc(i.n)} · ${i.w}×${i.h}<br>${i.reviewed?'<b style="color:#4ade80">검수 완료</b>':i.need?'<b style="color:#fbbf24">확인 필요</b>':'검수 안 함'}${E.dirty?' · <b style="color:#fbbf24">저장 안 됨</b>':''}</div>
+ <div class="row"><button class="btn ok" id="done" ${anaLock()?'disabled':''}>검수 완료 + 다음 (Enter)</button><button class="btn" id="sv" ${E.dirty&&!anaLock()?'':'disabled'}>저장 (Ctrl+S)</button></div>
+ <div class="row"><button class="btn ${E.draw?'pri':''}" id="drw">새 박스 그리기 (N)</button><span class="note">새 박스 자세:</span></div>
+ <div class="cls" id="newcls">${[0,1,2].map(c=>`<button data-nc="${c}" class="${E.newCls===c?'on':''}" style="${E.newCls===c?`background:${col(c)};border-color:${col(c)}`:''}">${c} ${KOR[c]}</button>`).join('')}</div>
+ <div style="margin-top:10px"><b>박스 ${E.anns.length}개</b> <span class="note">— 눌러서 선택, 숫자키로 자세 변경</span></div>
+ <div id="alist">${E.anns.map((a,k)=>`<div class="ann ${E.sel===k?'sel':''}" data-k="${k}"><div class="row" style="margin:0;justify-content:space-between"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${col(a.c)}"></span> #${k+1} <b>${a.c} ${KOR[a.c]||'?'}</b></span>
+  <span>${a.auto?`<span class="note">자동 ${a.auto.c===a.c?'':KOR[a.auto.c]+'→'}점수 ${a.auto.conf.toFixed(2)}</span>`:'<span class="note">직접 수정</span>'} <button class="btn sm" data-del="${k}" title="삭제 (Del)">✕</button></span></div>
+  <div class="cls">${[0,1,2].map(c=>`<button data-k="${k}" data-c="${c}" class="${a.c===c?'on':''}" style="${a.c===c?`background:${col(c)};border-color:${col(c)}`:''}">${c} ${KOR[c]}</button>`).join('')}</div>
+  ${a.auto&&E.sel===k?`<div class="note" style="margin:4px 0 0">${esc(a.auto.why)}</div>`:''}</div>`).join('')||'<p class="note">박스 없음 — 사람이 있으면 <kbd>N</kbd> 또는 빈 곳을 끌어서 그리세요. 사람이 없는 사진이면 그대로 검수 완료하면 돼요(빈 라벨).</p>'}</div>
+ <div class="row" style="margin-top:10px"><label><input type="checkbox" id="kpc" ${E.kp?'checked':''}> 관절 보기 (K)</label><label><input type="checkbox" id="hdc" ${E.hide?'checked':''}> 박스 숨기기 (H)</label></div>
+ <div class="row"><button class="btn sm" id="reanal" title="이 사진만 자동 분석 다시 (지금 박스는 바뀜)" ${jobBusy()?'disabled':''}>이 사진 다시 자동 분석</button><button class="btn sm danger-o" id="rm" ${anaLock()?'disabled':''}>이 사진 빼기 (X)</button></div>
+ <div class="row"><a href="#" id="hlp" style="color:#93c5fd">${E.help?'단축키 접기':'단축키 보기 (?)'}</a></div>
+ ${E.help?`<table class="keys">${[['A / ←','이전 사진'],['D / →','다음 사진'],['Enter','검수 완료 + 다음'],['0 1 2','선택 박스 자세 (선택 없으면 새 박스 자세)'],['Tab','다음 박스 선택 (Shift+Tab 이전)'],['N','새 박스 그리기 (빈 곳 끌기도 됨)'],['Del / Backspace','선택 박스 삭제'],['Shift+방향키','선택 박스 옮기기 (Alt 같이 = 크기)'],['Ctrl+Z / Ctrl+Y','되돌리기 / 다시'],['Ctrl+S','저장'],['K / H','관절 보기 / 박스 숨기기'],['X','이 사진 빼기 (제외된 사진으로)'],['Esc','그리기 취소 → 선택 해제 → 닫기']].map(([a,b])=>`<tr><td>${a.split(' / ').map(x=>`<kbd>${x}</kbd>`).join(' ')}</td><td>${b}</td></tr>`).join('')}</table>
+ <p class="note">넘기거나 닫을 때 바뀐 내용은 자동 저장돼요 (검수 완료 표시는 Enter 로만).</p>`:''}</div></div>`;
+ $('#pv').onclick=()=>step(-1);$('#nx').onclick=()=>step(1);$('#cl').onclick=closeEd;$('#done').onclick=()=>markDone();$('#sv').onclick=()=>save().then(()=>drawEd()).catch(x=>toast('저장 실패: '+x.message,'err'));
+ $('#drw').onclick=()=>{E.draw=!E.draw;drawEd()};$('#kpc').onchange=e=>{E.kp=e.target.checked;localStorage.setItem('al_kp',E.kp?1:0);drawSvg()};$('#hdc').onchange=e=>{E.hide=e.target.checked;drawSvg()};
+ $('#hlp').onclick=e=>{e.preventDefault();E.help=!E.help;localStorage.setItem('al_help',E.help?1:0);drawEd()};
+ $('#rm').onclick=removeCur;$('#reanal').onclick=reanalyze;
+ $$('#newcls [data-nc]').forEach(b=>b.onclick=()=>setNewCls(+b.dataset.nc));
+ $$('#alist .ann').forEach(e=>e.onclick=ev=>{if(ev.target.closest('button'))return;E.sel=+e.dataset.k;drawEd()});
+ $$('#alist [data-c]').forEach(b=>b.onclick=()=>{E.sel=+b.dataset.k;setCls(+b.dataset.c)});
+ $$('#alist [data-del]').forEach(b=>b.onclick=()=>{E.sel=+b.dataset.del;delSel()});
+ $('#edimg').onload=drawSvg; // 사진 크기가 정해진 뒤 핸들·글자 크기 다시 계산
+ const s=$('#eds');s.onpointerdown=pDown;s.onpointermove=pMove;s.onpointerup=pUp;s.onpointercancel=pUp;
+ drawSvg()}
+function scale(){const s=$('#eds');return s?E.list[E.k].w/Math.max(1,s.getBoundingClientRect().width):1}
+const SK=[[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
+function drawSvg(){const s=$('#eds');if(!E||!s)return;const i=E.list[E.k],sc=scale(),hs=7*sc;let h='';
+ if(E.kp)E.auto.forEach(p=>{if(!p.kp)return;SK.forEach(([a,b])=>{const A=p.kp[a],B=p.kp[b];if(A[2]>=.4&&B[2]>=.4)h+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="#fde047" stroke-opacity=".85" vector-effect="non-scaling-stroke" style="stroke-width:2px;pointer-events:none"/>`});
+  p.kp.forEach(k=>{if(k[2]>=.4)h+=`<circle cx="${k[0]}" cy="${k[1]}" r="${3*sc}" fill="#fde047" style="pointer-events:none"/>`})});
+ if(!E.hide)E.anns.forEach((a,k)=>{const[x1,y1,x2,y2]=a.box,on=E.sel===k;
+  h+=`<rect data-k="${k}" x="${x1}" y="${y1}" width="${x2-x1}" height="${y2-y1}" fill="${col(a.c)}" fill-opacity="${on?.18:.06}" stroke="${col(a.c)}" vector-effect="non-scaling-stroke" style="stroke-width:${on?3:2}px;cursor:${E.draw?'crosshair':'move'}"/>`;
+  const lab=`${k+1}. ${a.c} ${NAMES[a.c]||'?'}${a.auto&&a.auto.c===a.c?' '+a.auto.conf.toFixed(2):''}`,fs=13*sc,ty=y1>fs*1.4?y1-fs*1.4:y1;
+  h+=`<rect x="${x1}" y="${ty}" width="${(lab.length*7.4+8)*sc}" height="${fs*1.4}" fill="${col(a.c)}" style="pointer-events:none"/><text x="${x1+4*sc}" y="${ty+fs*1.05}" fill="#fff" font-size="${fs}" font-family="system-ui,sans-serif" style="pointer-events:none">${esc(lab)}</text>`});
+ if(!E.hide&&E.sel>=0&&E.anns[E.sel]&&!E.draw){const[x1,y1,x2,y2]=E.anns[E.sel].box,mx=(x1+x2)/2,my=(y1+y2)/2;
+  const P={nw:[x1,y1],n:[mx,y1],ne:[x2,y1],e:[x2,my],se:[x2,y2],s:[mx,y2],sw:[x1,y2],w:[x1,my]},CUR={nw:'nwse',se:'nwse',ne:'nesw',sw:'nesw',n:'ns',s:'ns',e:'ew',w:'ew'};
+  HANDLES.forEach(k=>h+=`<rect data-h="${k}" x="${P[k][0]-hs/2}" y="${P[k][1]-hs/2}" width="${hs}" height="${hs}" fill="#fff" stroke="#111" vector-effect="non-scaling-stroke" style="stroke-width:1px;cursor:${CUR[k]}-resize"/>`)}
+ if(E.drag&&E.drag.type==='draw'&&E.drag.cur){const b=norm(E.drag.start,E.drag.cur);h+=`<rect x="${b[0]}" y="${b[1]}" width="${b[2]-b[0]}" height="${b[3]-b[1]}" fill="${col(E.newCls)}" fill-opacity=".15" stroke="${col(E.newCls)}" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" style="stroke-width:2px;pointer-events:none"/>`}
+ s.innerHTML=h;
+ $('#badge').innerHTML=E.draw?`<b>그리기</b>: 사람 전체(머리~발)를 끌어서 감싸세요 → <span style="color:${col(E.newCls)}">${E.newCls} ${KOR[E.newCls]}</span> (숫자키로 변경, Esc 취소)`:E.sel>=0&&E.anns[E.sel]?`#${E.sel+1} 선택 — 끌어서 이동, 흰 점으로 크기, 0/1/2 자세, Del 삭제`:'박스를 누르면 선택 · 빈 곳을 끌면 새 박스'}
+function pt(e){const s=$('#eds'),r=s.getBoundingClientRect(),i=E.list[E.k];return[Math.max(0,Math.min(i.w,(e.clientX-r.left)/r.width*i.w)),Math.max(0,Math.min(i.h,(e.clientY-r.top)/r.height*i.h))]}
+const norm=(a,b)=>[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])];
+function pDown(e){if(e.button!==0)return;const p=pt(e),t=e.target;e.currentTarget.setPointerCapture(e.pointerId);
+ if(!E.draw&&t.dataset.h){E.drag={type:'resize',h:t.dataset.h,orig:[...E.anns[E.sel].box],start:p,before:clone(E.anns)}}
+ else if(!E.draw&&t.dataset.k!==undefined){E.sel=+t.dataset.k;E.drag={type:'move',orig:[...E.anns[E.sel].box],start:p,before:clone(E.anns)};drawSvg()}
+ else{E.drag={type:'draw',start:p,cur:null}}}
+function pMove(e){if(!E||!E.drag)return;const p=pt(e),d=E.drag,i=E.list[E.k];
+ if(d.type==='draw'){d.cur=p;drawSvg();return}
+ const dx=p[0]-d.start[0],dy=p[1]-d.start[1];let[x1,y1,x2,y2]=d.orig;
+ if(d.type==='move'){const mx=Math.max(-x1,Math.min(i.w-x2,dx)),my=Math.max(-y1,Math.min(i.h-y2,dy));E.anns[E.sel].box=[x1+mx,y1+my,x2+mx,y2+my]}
+ else{if(d.h.includes('w'))x1+=dx;if(d.h.includes('e'))x2+=dx;if(d.h.includes('n'))y1+=dy;if(d.h.includes('s'))y2+=dy;E.anns[E.sel].box=norm([x1,y1],[x2,y2])}
+ d.moved=true;delete E.anns[E.sel].auto;drawSvg()}
+function pUp(e){if(!E||!E.drag)return;const d=E.drag;E.drag=null;const sc=scale();
+ if(d.type==='draw'){if(d.cur&&Math.abs(d.cur[0]-d.start[0])>6*sc&&Math.abs(d.cur[1]-d.start[1])>6*sc){snap();E.anns.push({c:E.newCls,box:norm(d.start,d.cur)});E.sel=E.anns.length-1;E.draw=false}else if(!E.draw){E.sel=-1}drawEd();return}
+ if(d.moved){E.hist.push(d.before);E.fut=[];E.dirty=true}drawEd()}
+function setCls(c){if(E.sel>=0&&E.anns[E.sel]){if(E.anns[E.sel].c!==c){snap();E.anns[E.sel].c=c}setNewCls(c,true)}else setNewCls(c)}
+function setNewCls(c,quiet){E.newCls=c;localStorage.setItem('al_cls',c);drawEd()}
+function delSel(){if(E.sel<0||!E.anns[E.sel])return;snap();E.anns.splice(E.sel,1);E.sel=Math.min(E.sel,E.anns.length-1);drawEd()}
+function nudge(dx,dy,resize){if(E.sel<0||!E.anns[E.sel])return;const i=E.list[E.k];let[x1,y1,x2,y2]=E.anns[E.sel].box;
+ if(!(nudge.t&&Date.now()-nudge.t<800&&nudge.k===E.sel))snap();nudge.t=Date.now();nudge.k=E.sel;E.dirty=true;  // 연속 누름은 되돌리기 한 번으로
+ if(resize){x2=Math.max(x1+2,Math.min(i.w,x2+dx));y2=Math.max(y1+2,Math.min(i.h,y2+dy))}else{const mx=Math.max(-x1,Math.min(i.w-x2,dx)),my=Math.max(-y1,Math.min(i.h-y2,dy));x1+=mx;x2+=mx;y1+=my;y2+=my}
+ E.anns[E.sel].box=[x1,y1,x2,y2];delete E.anns[E.sel].auto;drawSvg();const sv=$('#sv');if(sv)sv.disabled=false}
+async function save(reviewed){const i=E.list[E.k];const body={work:WORK,n:i.n,w:i.w,h:i.h,anns:E.anns.map(a=>({c:a.c,box:a.box}))};if(reviewed!==undefined)body.reviewed=reviewed;
+ const r=await api('/api/save',body);Object.assign(i,r.state);if(S&&S.by[i.n])Object.assign(S.by[i.n],r.state);E.dirty=false;return r}
+async function step(d){const k=E.k+d;if(k<0||k>=E.list.length){toast(d>0?'마지막 사진이에요':'첫 사진이에요');return}
+ try{if(E.dirty)await save()}catch(e){toast('저장 실패: '+e.message,'err');return}E.k=k;loadEd()}
+async function markDone(){try{await save(true);toast('검수 완료 · 저장했어요')}catch(e){toast('저장 실패: '+e.message,'err');return}
+ if(E.k<E.list.length-1){E.k++;loadEd()}else{toast('이 목록의 마지막 사진까지 검수했어요. Esc 로 목록에 돌아가요.');drawEd()}}
+async function closeEd(){if(E.dirty){try{await save()}catch(e){if(!confirm('저장 실패: '+e.message+'\n저장하지 않고 닫을까요?'))return}}
+ // 목록과 같은 필터로 열었으면 마지막으로 본 사진이 있는 페이지로 돌아감
+ if(E.fk===F.st+'|'+F.cls+'|'+F.sort&&E.list[E.k]){F.page=Math.floor(E.k/PER);F.focus=E.list[E.k].n}
+ $('#ed').style.display='none';$('#ed').innerHTML='';E=null;try{await loadWorks()}catch(e){}try{await loadState()}catch(e){S=null}render()}
+async function removeCur(){if(E.busy)return;const i=E.list[E.k];E.busy=1;
+ try{if(E.dirty){try{await save()}catch(e){return toast(`저장 실패: ${e.message} — 사진을 빼지 않았어요`,'err')}}
+  let r;try{r=await api('/api/move',{work:WORK,names:[i.n],to:'removed'})}catch(e){return terr(e)}
+  if(!r.moved)return toast(`'${i.n}' 과(와) 같은 이름의 파일이 '제외된 사진'에 이미 있어서 빼지 않았어요`,'err');
+  toast(`'${i.n}' 을(를) 뺐어요. '제외된 사진' 탭에서 되돌릴 수 있어요.`);SEL.delete(i.n);
+  E.list.splice(E.k,1);if(S){S.images=S.images.filter(x=>x.n!==i.n);delete S.by[i.n]}if(!E.list.length){E.dirty=false;return closeEd()}E.k=Math.min(E.k,E.list.length-1);loadEd()}
+ finally{if(E)E.busy=0}}
+async function reanalyze(){if(!confirm('이 사진만 다시 자동 분석해서 지금 박스를 자동 결과로 바꿔요.\n검수 완료 표시도 풀려요. 진행할까요?'))return;const i=E.list[E.k];
+ const c=+(localStorage.getItem('al_conf')||0.35),z=+(localStorage.getItem('al_imgsz')||960);
+ let r0;try{r0=await api('/api/analyze',{work:WORK,mode:'one',names:[i.n],conf:c>=0.05&&c<=0.9?c:0.35,imgsz:[640,960,1280].includes(z)?z:960})}catch(e){return terr(e)}
+ E.dirty=false;toast('분석 중…');pollJob.want=r0.seq||0;pollJob(); // 고치던 내용은 저장하지 않고 버림 (곧 자동 결과로 바뀜)
+ for(;;){await new Promise(r=>setTimeout(r,500));let j;try{j=await api('/api/job')}catch(e){continue}if(!j.busy)break}
+ let st;try{st=await api('/api/state?work='+encodeURIComponent(WORK))}catch(e){return terr(e)}
+ const ni=st.images.find(v=>v.n===i.n);if(!E||!ni)return;const x=E.list.findIndex(v=>v.n===i.n);if(x<0)return;
+ E.list[x]=ni;if(S&&S.by[i.n])Object.assign(S.by[i.n],ni);if(x===E.k)loadEd()}
+// 검수 목록에서 Esc = 선택 해제 (편집 화면이 닫혀 있고 입력칸에 초점이 없을 때)
+document.addEventListener('keydown',e=>{if(E||e.defaultPrevented||e.key!=='Escape'||tab!=='review'||!SEL.size)return;if(e.target.matches('input,select,textarea'))return;SEL.clear();updSel()});
+document.addEventListener('keydown',e=>{if(!E)return;if(e.target.matches('input[type=text],input[type=number],select'))return;const k=e.key,ctrl=e.ctrlKey||e.metaKey;
+ const go=f=>{e.preventDefault();f()};
+ if(ctrl&&(k==='z'||k==='Z')&&!e.shiftKey)return go(undo);if(ctrl&&(k==='y'||k==='Y'||((k==='z'||k==='Z')&&e.shiftKey)))return go(redo);
+ if(ctrl&&(k==='s'||k==='S'))return go(()=>save().then(()=>{toast('저장했어요');drawEd()}).catch(x=>toast('저장 실패: '+x.message,'err')));
+ if(ctrl)return;
+ if(e.shiftKey&&k.startsWith('Arrow')){const st=e.altKey?2:2*Math.max(1,Math.round(scale()));const v={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[k];return go(()=>nudge(v[0],v[1],e.altKey))}
+ if(k==='ArrowRight'||k==='d'||k==='D')return go(()=>step(1));if(k==='ArrowLeft'||k==='a'||k==='A')return go(()=>step(-1));
+ if(k==='Enter')return go(markDone);
+ if(['0','1','2'].includes(k))return go(()=>setCls(+k));
+ if(k==='Tab')return go(()=>{const n=E.anns.length;if(!n)return;E.sel=e.shiftKey?(E.sel<=0?n-1:E.sel-1):(E.sel+1)%n;drawEd()});
+ if(k==='n'||k==='N')return go(()=>{E.draw=!E.draw;drawEd()});
+ if(k==='Delete'||k==='Backspace')return go(delSel);
+ if(k==='k'||k==='K')return go(()=>{E.kp=!E.kp;localStorage.setItem('al_kp',E.kp?1:0);drawEd()});
+ if(k==='h'||k==='H')return go(()=>{E.hide=!E.hide;drawEd()});
+ if(k==='x'||k==='X')return go(removeCur);
+ if(k==='?')return go(()=>{E.help=!E.help;localStorage.setItem('al_help',E.help?1:0);drawEd()});
+ if(k==='Escape')return go(()=>{if(E.drag){E.drag=null;drawSvg()}else if(E.draw){E.draw=false;drawEd()}else if(E.sel>=0){E.sel=-1;drawEd()}else closeEd()})});
+window.addEventListener('resize',()=>{if(E)drawSvg();setHH()});
+window.addEventListener('beforeunload',e=>{if((E&&E.dirty)||(UL&&!UL.done)){e.preventDefault();e.returnValue=''}});
+// 끌어다 놓기 영역 밖에 사진을 떨어뜨려도 브라우저가 그 파일을 열지 않게
+document.addEventListener('dragover',e=>{e.preventDefault();if(!(e.target.closest&&e.target.closest('#dz')))e.dataTransfer.dropEffect='none'});
+document.addEventListener('drop',e=>e.preventDefault());
+
+// ---------------------------------------------------------------- 4. 내보내기
+// 서버(파이썬 round)와 같은 반올림 (0.5 는 짝수 쪽으로)
+const rnd=x=>{const f=Math.floor(x),d=x-f;return d>.5?f+1:d<.5?f:(f%2?f+1:f)};
+function rExport(){const w=cur();
+ $('#main').innerHTML=`<div class="panel"><h2>4. 내보내기</h2>
+ <p class="note">학습용 YOLO 데이터셋 폴더와 zip 을 만들어요. 프로젝트는 그대로 남아요.</p>
+ <div><label><input type="checkbox" id="onlyr" ${EXO.only?'checked':''}> 검수 완료한 사진만 (${w.reviewed}장)</label></div>
+ <p class="warnl" id="onlyw" ${EXO.only?'hidden':''}>검수하지 않은 자동 라벨도 들어가요. 학습용으로는 권하지 않아요.</p>
+ <div class="bar" style="margin:12px 0 0">나누기 비율(%) train <input type="number" id="r0" min="0" max="100" step="1" value="${esc(EXO.r[0])}" style="width:70px"> valid <input type="number" id="r1" min="0" max="100" step="1" value="${esc(EXO.r[1])}" style="width:70px"> test <input type="number" id="r2" min="0" max="100" step="1" value="${esc(EXO.r[2])}" style="width:70px">
+ <span id="rsum"></span> <span id="rerr" style="color:var(--bad);font-size:13px"></span></div>
+ <p class="note" id="rprev" style="margin:4px 0 0"></p>
+ <p class="note" id="rwarn" style="margin:4px 0 0">사진 단위로 무작위로 나눠요. 같은 영상의 비슷한 장면이 train 과 valid 에 섞이면 점수가 실제보다 좋게 나와요. 영상 단위로 나누려면 train 100 으로 내보낸 뒤 직접 나누세요.</p>
+ <div class="bar" style="margin-top:12px"><button class="btn pri" id="ex">내보내기</button><span class="note" id="exwhy" style="margin:0"></span></div>
+ <div id="jobbox">${jobHtml('내보내기')}</div><div id="exres"></div>
+ <details><summary>만들어지는 폴더 구조</summary><pre class="tree">train/images   train/labels
+(valid/, test/ 는 비율을 넣었을 때)
+data.yaml      names: lie, sit, stand
+summary.json   사진·박스 수, 사용한 규칙</pre></details></div>
+ <div class="panel" id="exhist" hidden></div>`;
+ ['onlyr','r0','r1','r2'].forEach(id=>$('#'+id).oninput=updExport);$('#onlyr').onchange=updExport;
+ $('#ex').onclick=e=>{const v=updExport();if(v)startJob('/api/export',{work:WORK,only_reviewed:EXO.only,split:v},e.currentTarget)};
+ updExport();showExportResult();loadExHist()}
+// 입력이 바뀔 때마다 검사하고 예상 장수를 보여 줌. 내보낼 수 있으면 비율 [train, valid, test] 를 돌려줌
+function updExport(){const w=cur(),raw=[0,1,2].map(k=>$('#r'+k).value.trim()),v=raw.map(Number);EXO.only=$('#onlyr').checked;EXO.r=raw;
+ const bad=raw.some((x,k)=>x===''||!Number.isInteger(v[k])||v[k]<0||v[k]>100),sum=v[0]+v[1]+v[2];
+ const rm=bad?'비율은 0 ~ 100 사이의 정수로 적어 주세요':sum!==100?'비율 합계를 100으로 맞춰 주세요':!v[0]?'train 은 0보다 커야 해요':'';
+ $('#rsum').textContent=bad?'':`합계 ${sum}`;$('#rsum').style.color=!bad&&sum!==100?'var(--bad)':'';$('#rerr').textContent=rm;
+ $('#onlyw').hidden=EXO.only;$('#rwarn').hidden=bad||!(v[1]+v[2]>0);
+ const N=EXO.only?(w.reviewed_labeled!=null?w.reviewed_labeled:w.reviewed):w.labeled,pv=$('#rprev');
+ if(N==null||rm)pv.hidden=true;else{const a=Math.min(N,rnd(N*v[0]/100)),b=Math.min(N-a,rnd(N*v[1]/100));pv.hidden=false;pv.textContent=`(예상) train ${a}장 · valid ${b}장 · test ${N-a-b}장`}
+ let why=blockTxt('내보내기');
+ if(!why&&EXO.only&&!N)why="검수 완료한 사진이 없어요. '3. 검수·수정'에서 검수하거나 위 체크를 끄세요.";
+ else if(!why&&!EXO.only&&N===0)why='내보낼 사진이 없어요. 먼저 자동 분석을 하세요.';
+ const off=!!(why||rm||jobBusy());$('#exwhy').textContent=why;$('#ex').disabled=off;$('#ex').title=why||rm;return off?null:v}
+function showExportResult(){const j=JOBV;if(!(j&&!j.busy&&!j.err&&j.kind==='내보내기'&&j.result&&j.work===WORK))return;const r=j.result,m=r.images||{},b=r.boxes||{};
+ $('#exres').innerHTML=`<p class="stat" style="display:inline-block">내보냈어요: train ${m.train||0} · valid ${m.valid||0} · test ${m.test||0}장 — 박스 눕기 ${b.lie||0} · 앉기 ${b.sit||0} · 서기 ${b.stand||0}<br>${esc(r.zip)} <button class="btn sm" id="oe">폴더 열기</button></p>`;
+ $('#oe').onclick=()=>api('/api/open',{path:r.path}).catch(terr)}
+async function loadExHist(){const w=WORK;let r;try{r=await api('/api/exports?work='+encodeURIComponent(w))}catch(e){return} // 지난 목록은 못 읽어도 내보내기에는 지장 없어서 조용히 숨김
+ const h=$('#exhist');if(tab!=='export'||w!==WORK||!h)return;if(!r.exports.length){h.hidden=true;return}
+ h.innerHTML=`<h2>지난 내보내기</h2><table>${r.exports.map((x,k)=>{const m=x.images||{},a=m.train||0,b=m.valid||0,c=m.test||0;
+  return `<tr><td>${esc(x.time)} · 사진 ${a+b+c}장 · train/valid/test ${a}/${b}/${c} · 검수 완료만 ${x.only_reviewed?'예':'아니오'}</td><td><button class="btn sm" data-ox="${k}">폴더 열기</button></td></tr>`}).join('')}</table>`;
+ h.hidden=false;$$('[data-ox]').forEach(b=>b.onclick=()=>api('/api/open',{path:r.exports[+b.dataset.ox].path}).catch(terr))}
+
+// ---------------------------------------------------------------- 제외된 사진
+async function rRemoved(){if(!S){$('#main').innerHTML='<p class="note">사진 목록을 불러오는 중…</p>';try{await loadState()}catch(e){if(tab==='removed')listFail(e,rRemoved);return}if(tab!=='removed'||!S)return}
+ const R=S.removed,has=new Set(R);for(const n of [...SELR])if(!has.has(n))SELR.delete(n);
+ const pages=Math.max(1,Math.ceil(R.length/PER));RP=Math.max(0,Math.min(RP,pages-1));const P=R.slice(RP*PER,(RP+1)*PER);RV2={R,P};const pg=pager('rp',RP,pages);
+ $('#main').innerHTML=`<div class="panel"><h2>제외된 사진 (${R.length}장)</h2>
+ <p class="note">여기 있는 사진은 분석·검수·내보내기에서 빠져 있어요. 되돌리면 라벨과 검수 기록도 그대로 돌아와요. 사진은 지워지지 않아요.</p>
+ ${R.length?`<div class="selbar" id="selbarr"></div>${pg}<div class="grid" id="rgrid">${P.map((n,k)=>`<div class="card${SELR.has(n)?' sel':''}" data-k="${k}"><div class="pic"><img loading="lazy" src="/img?work=${encodeURIComponent(WORK)}&n=${encodeURIComponent(n)}&w=400&removed=1"><span class="chk">✓</span></div><div class="cap"><div class="nm">${esc(n)}</div><button class="btn sm" data-r="${k}">되돌리기</button></div></div>`).join('')}</div>${pg}`
+ :`<p class="note">제외된 사진이 없어요. '3. 검수·수정'에서 사진을 골라 '제외하기'를 누르거나, 편집 화면에서 X 를 누르면 여기로 와요.</p>`}</div>`;
+ $$('[data-rp]').forEach(b=>b.onclick=()=>{RP+=+b.dataset.rp;rRemoved();scrollTo(0,0)});
+ if($('#rgrid'))$('#rgrid').onclick=ev=>{const c=ev.target.closest('.card');if(!c)return;const n=P[+c.dataset.k];if(ev.target.closest('[data-r]'))return back([n]);pickR(n,ev.shiftKey)};
+ updSelR()}
+function pickR(n,shift){const R=RV2.R,on=!SELR.has(n);let names=[n];
+ if(shift&&SELRA&&SELRA!==n){const a=R.indexOf(SELRA),b=R.indexOf(n);if(a>=0&&b>=0)names=R.slice(Math.min(a,b),Math.max(a,b)+1)}
+ names.forEach(x=>on?SELR.add(x):SELR.delete(x));SELRA=n;updSelR()}
+function updSelR(){const b=$('#selbarr');if(!b)return;const{R,P}=RV2,s=SELR.size;
+ $$('#rgrid .card').forEach(c=>c.classList.toggle('sel',SELR.has(P[+c.dataset.k])));
+ b.innerHTML=`<b>선택 ${s}장</b> <button class="btn sm" id="rsp">이 페이지 모두 선택</button> <button class="btn sm" id="rsn" ${s?'':'disabled'}>선택 해제</button>
+ <span class="sep"></span><button class="btn pri" id="rsb" ${s?'':'disabled title="먼저 사진을 골라 주세요"'}>선택한 ${s}장 되돌리기</button> <button class="btn" id="rall">전부 되돌리기 (${R.length}장)</button>`;
+ $('#rsp').onclick=()=>{P.forEach(n=>SELR.add(n));updSelR()};$('#rsn').onclick=()=>{SELR.clear();updSelR()};
+ $('#rsb').onclick=()=>back([...SELR]);$('#rall').onclick=()=>{if(confirm(`제외된 사진 ${R.length}장을 모두 되돌릴까요?`))back(R)}}
+async function back(names){selBusy();let r;try{r=await api('/api/move',{work:WORK,names,to:'restore'})}catch(e){updSelR();return terr(e)}
+ toast(restoreMsg(r));SELR.clear();LASTMOVE=null;reloadList()}
+
+loadWorks().then(()=>{if(WORK){localStorage.setItem('al_work',WORK);tab=nextTab(cur())}render();pollJob()})
+ .catch(e=>{$('#main').innerHTML=`<div class="panel"><p class="err">불러오기 실패: ${esc(e.message)}</p></div>`});
+</script></body></html>
